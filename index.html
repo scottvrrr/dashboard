@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>◈</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080b12;
+      --bg2:       #0d1117;
+      --bg3:       #111827;
+      --border:    #1e2d40;
+      --accent:    #00d4ff;
+      --accent2:   #7c3aed;
+      --accent-dim:#00d4ff22;
+      --text:      #e2e8f0;
+      --text-dim:  #64748b;
+      --text-muted:#334155;
+      --danger:    #ef4444;
+      --card-bg:   #0d1117;
+      --glow:      0 0 20px #00d4ff33;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.18;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: -200px; left: -200px;
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #00d4ff0d 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 28px 40px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #0a0f1a 0%, transparent 100%);
+    }
+
+    .logo { display: flex; align-items: center; gap: 12px; }
+
+    .logo-mark {
+      width: 36px; height: 36px;
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      color: var(--accent);
+      box-shadow: var(--glow);
+    }
+
+    .logo-text { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-text span { color: var(--accent); }
+
+    .header-meta {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--text-dim);
+      text-align: right;
+      line-height: 1.8;
+    }
+
+    main {
+      position: relative;
+      z-index: 10;
+      padding: 40px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .category-section { margin-bottom: 48px; animation: fadeUp 0.4s ease both; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .category-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+
+    .category-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .category-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, var(--border) 0%, transparent 100%);
+    }
+
+    .category-actions { display: flex; gap: 8px; }
+
+    .btn-cat-action {
+      display: none;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--text-dim);
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      padding: 4px 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-cat-action:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-cat-action.danger:hover { border-color: var(--danger); color: var(--danger); }
+    body.edit-mode .btn-cat-action { display: flex; }
+
+    .site-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 12px;
+    }
+
+    .site-card {
+      position: relative;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      cursor: pointer;
+      text-decoration: none;
+      color: var(--text);
+      transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow: hidden;
+    }
+
+    .site-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--accent-dim) 0%, transparent 60%);
+      opacity: 0;
+      transition: opacity 0.2s;
+      border-radius: inherit;
+    }
+
+    .site-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 32px #00d4ff18, 0 0 0 1px #00d4ff22; }
+    .site-card:hover::before { opacity: 1; }
+
+    .site-icon { font-size: 26px; line-height: 1; }
+    .site-name { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .site-url { font-family: 'Space Mono', monospace; font-size: 10px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .card-edit-controls { display: none; position: absolute; top: 6px; right: 6px; gap: 4px; }
+    body.edit-mode .card-edit-controls { display: flex; }
+
+    .card-btn {
+      width: 24px; height: 24px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg2);
+      color: var(--text-dim);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .card-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    .card-btn.del:hover { border-color: var(--danger); color: var(--danger); background: #ef444418; }
+
+    .add-site-card {
+      display: none;
+      background: transparent;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 20px 16px;
+      cursor: pointer;
+      color: var(--text-muted);
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 13px;
+      transition: all 0.2s;
+      min-height: 100px;
+    }
+
+    .add-site-card:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    body.edit-mode .add-site-card { display: flex; }
+
+    .edit-banner {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      background: var(--accent2);
+      color: white;
+      text-align: center;
+      padding: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    body.edit-mode .edit-banner { display: block; }
+    body.edit-mode header, body.edit-mode main { margin-top: 36px; }
+
+    .fab {
+      position: fixed;
+      bottom: 32px; right: 32px;
+      z-index: 100;
+      width: 52px; height: 52px;
+      border-radius: 16px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px #00000066;
+    }
+
+    .fab:hover { border-color: var(--accent); color: var(--accent); box-shadow: var(--glow); }
+    body.edit-mode .fab { background: var(--accent2); border-color: var(--accent2); color: white; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: #00000099;
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      width: 380px;
+      max-width: calc(100vw - 40px);
+      transform: translateY(12px);
+      transition: transform 0.2s;
+    }
+
+    .modal-overlay.open .modal { transform: translateY(0); }
+    .modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 6px; }
+
+    .modal-sub {
+      font-size: 12px;
+      color: var(--text-dim);
+      font-family: 'Space Mono', monospace;
+      margin-bottom: 24px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-family: 'Space Mono', monospace;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus { border-color: var(--accent); }
+
+    .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+
+    .btn-primary {
+      flex: 1; padding: 10px;
+      background: var(--accent);
+      border: none; border-radius: 8px;
+      color: #000;
+      font-family: 'Syne', sans-serif;
+      font-weight: 700; font-size: 14px;
+      cursor: pointer; transition: opacity 0.2s;
+    }
+
+    .btn-primary:hover { opacity: 0.85; }
+
+    .btn-secondary {
+      padding: 10px 20px;
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-dim);
+      font-family: 'Syne', sans-serif;
+      font-weight: 600; font-size: 14px;
+      cursor: pointer; transition: all 0.2s;
+    }
+
+    .btn-secondary:hover { border-color: var(--text-dim); color: var(--text); }
+
+    .error-msg {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      color: var(--danger);
+      margin-top: 8px;
+      min-height: 16px;
+    }
+
+    .add-category-btn {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      color: var(--text-muted);
+      font-family: 'Syne', sans-serif;
+      font-size: 14px;
+      cursor: pointer;
+      width: 100%;
+      transition: all 0.2s;
+      margin-top: 8px;
+      margin-bottom: 48px;
+    }
+
+    .add-category-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+    body.edit-mode .add-category-btn { display: flex; }
+
+    @media (max-width: 640px) {
+      header { padding: 20px; }
+      main { padding: 20px; }
+      .site-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="edit-banner">✏️ EDIT MODE — click ✏ on cards to edit &nbsp;|&nbsp; click ✓ to exit</div>
+
+  <header>
+    <div class="logo">
+      <div class="logo-mark">◈</div>
+      <div class="logo-text">MY<span>DASH</span></div>
+    </div>
+    <div class="header-meta">
+      <div id="clock">--:--:--</div>
+      <div id="header-date"></div>
+    </div>
+  </header>
+
+  <main>
+    <div id="main-content"></div>
+  </main>
+
+  <button class="fab" id="fab" onclick="toggleEditMode()" title="Edit Dashboard">✏️</button>
+
+  <!-- Passcode Modal -->
+  <div class="modal-overlay" id="passcode-modal">
+    <div class="modal">
+      <h2>🔒 Enter Passcode</h2>
+      <p class="modal-sub">Enter your edit passcode to continue</p>
+      <div class="form-group">
+        <label>Passcode</label>
+        <input type="password" id="passcode-input" placeholder="••••" autocomplete="off" />
+      </div>
+      <div class="error-msg" id="passcode-error"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closePasscodeModal()">Cancel</button>
+        <button class="btn-primary" onclick="submitPasscode()">Unlock</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div class="modal-overlay" id="cat-modal">
+    <div class="modal">
+      <h2 id="cat-modal-title">New Category</h2>
+      <p class="modal-sub">Give this category a name</p>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="cat-name-input" placeholder="e.g. Social, Dev Tools..." />
+      </div>
+      <div class="error-msg" id="cat-error"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeCatModal()">Cancel</button>
+        <button class="btn-primary" onclick="submitCategory()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Site Modal -->
+  <div class="modal-overlay" id="site-modal">
+    <div class="modal">
+      <h2 id="site-modal-title">Add Site</h2>
+      <p class="modal-sub">Fill in the details for this site</p>
+      <div class="form-group">
+        <label>Name</label>
+        <input type="text" id="site-name-input" placeholder="e.g. GitHub" />
+      </div>
+      <div class="form-group">
+        <label>URL</label>
+        <input type="text" id="site-url-input" placeholder="https://..." />
+      </div>
+      <div class="form-group">
+        <label>Icon (emoji)</label>
+        <input type="text" id="site-icon-input" placeholder="🔗" maxlength="4" />
+      </div>
+      <div class="error-msg" id="site-error"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeSiteModal()">Cancel</button>
+        <button class="btn-primary" onclick="submitSite()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const EDIT_PASSCODE = "ohioohio1234"; // ⚠️ CHANGE THIS TO SOMETHING PRIVATE!
+    const STORAGE_KEY   = "dashboard_data";
+
+    const DEFAULT_DATA = {
+      categories: [
+        {
+          id: "cat-1", name: "Social",
+          sites: [
+            { id: "site-1", name: "Twitter / X", url: "https://x.com", icon: "🐦" },
+            { id: "site-2", name: "Reddit", url: "https://reddit.com", icon: "🤖" }
+          ]
+        },
+        {
+          id: "cat-2", name: "Dev Tools",
+          sites: [
+            { id: "site-3", name: "GitHub", url: "https://github.com", icon: "🐙" },
+            { id: "site-4", name: "Railway", url: "https://railway.app", icon: "🚂" }
+          ]
+        },
+        {
+          id: "cat-3", name: "Utilities",
+          sites: [
+            { id: "site-5", name: "Claude AI", url: "https://claude.ai", icon: "✨" }
+          ]
+        },
+        // ⬇️ EDUCATION CATEGORY (ORIGINAL 10 + 18 NEW ACADEMIC SITES) ⬇️
+        {
+          id: "cat-4", name: "Education",
+          sites: [
+            // Original educational sites from your first request
+            { id: "site-6",  name: "Educationate (S3)",      url: "https://s3.amazonaws.com/educationate/index.html",      icon: "📖" },
+            { id: "site-7",  name: "Educationate (GCS)",     url: "https://storage.googleapis.com/educationate/index.html", icon: "📖" },
+            { id: "site-8",  name: "DeltaMath Demo",         url: "https://s3.amazonaws.com/deltamath-demo/index.html",  icon: "➕" },
+            { id: "site-9",  name: "Canvas LMS (S3)",        url: "https://s3.amazonaws.com/canvas-lms/index.html",      icon: "🎨" },
+            { id: "site-10", name: "Canvas LMS (GCS)",       url: "https://canvas-lms.storage.googleapis.com/index.html", icon: "🎨" },
+            { id: "site-11", name: "Instructure (GCS)",      url: "https://storage.googleapis.com/instructure/index.html", icon: "⚙️" },
+            { id: "site-12", name: "Classroom Duck",         url: "https://unpkg.com/classroomduck@1.0.0/index.html",    icon: "🦆" },
+            { id: "site-13", name: "Valoq Math Work",        url: "https://unpkg.com/valoq-math-work@1.0.17/index.html", icon: "🧮" },
+            { id: "site-14", name: "Stocks Education",       url: "https://stockseducation.my.canva.site/gn-math",       icon: "📈" },
+            { id: "site-15", name: "GN Math",                url: "https://gnmath.my.canva.site/",                     icon: "🔢" },
+            
+            // NEW: Academic domain sites (18 unique domains from your latest list)
+            { id: "site-16", name: "Finucane.org Hub",       url: "http://english.computer.chemistry.student.teacher.finucane.org/",       icon: "📚" },
+            { id: "site-17", name: "Eccoi.org Study Portal", url: "http://calculus.algebra.computer.chemistry.teacher.eccoi.org/",       icon: "📚" },
+            { id: "site-18", name: "Thejarlady.ca Resource", url: "http://drama.lecture.reading.physics.computer.thejarlady.ca/",       icon: "📚" },
+            { id: "site-19", name: "Tablulasync.com Hub",    url: "http://computer.technology.art.campus.physics.tabulasync.com/",       icon: "📚" },
+            { id: "site-20", name: "Lumbinifashion.com.np Resource", url: "http://physics.geography.computer.biology.science.lumbinifashion.com.np/", icon: "📚" },
+            { id: "site-21", name: "Nicksbailbonds.com Study", url: "http://writing.geometry.geography.studying.grammar.nicksbailbonds.com/", icon: "📚" },
+            { id: "site-22", name: "Dineskhatri.com.np Resource", url: "http://classroom.chemistry.writing.music.art.dineskhatri.com.np/", icon: "📚" },
+            { id: "site-23", name: "Jsenkorjaus.fi Finnish Resource", url: "http://science.library.reading.homework.chemistry.xn--jsenkorjaus-l8a.fi/", icon: "📚" },
+            { id: "site-24", name: "Latinliturgy.com Hub",   url: "http://calculus.studying.grammar.chemistry.geography.latinliturgy.com/",   icon: "📚" },
+            { id: "site-25", name: "Sapkotadipak.com.np Resource", url: "http://classroom.literature.drama.music.algebra.sapkotadipak.com.np/", icon: "📚" },
+            { id: "site-26", name: "Yan.ch Study Portal",    url: "http://writing.classroom.assignment.library.literature.yan.ch/",       icon: "📚" },
+            { id: "site-27", name: "Holypuck.com Project",   url: "http://project.grammar.geometry.student.history.holypuck.com/",       icon: "📚" },
+            { id: "site-28", name: "Elymbmx.com Study Hub",  url: "http://vocabulary.campus.drama.calculus.geography.elymbmx.com/",       icon: "📚" },
+            { id: "site-29", name: "Sobolev.net Resource",   url: "http://library.physics.chemistry.writing.reading.sobolev.net/",         icon: "📚" },
+            { id: "site-30", name: "Umbigo.org Resource",    url: "http://engineering.drama.seminar.technology.student.umbigo.org/",       icon: "📚" },
+            { id: "site-31", name: "Vawars.com Study",       url: "http://studying.biology.assignment.engineering.music.vawars.com/",       icon: "📚" },
+            { id: "site-32", name: "Wirtschaftslexikon.co Hub", url: "http://lecture.art.assignment.homework.teacher.wirtschaftslexikon.co/", icon: "📚" }
+          ]
+        },
+        // ⬇️ GAMES CATEGORY (UNCHANGED FROM PREVIOUS) ⬇️
+        {
+          id: "cat-5", name: "Games",
+          sites: [
+            { id: "site-33", name: "Lich Games",     url: "https://s3.amazonaws.com/lichgames/index.html",          icon: "🎲" },
+            { id: "site-34", name: "GHST",           url: "https://s3.amazonaws.com/ghst/index.html",               icon: "👻" },
+            { id: "site-35", name: "IO Games Lists", url: "https://s3.amazonaws.com/iogameslists/index.html",       icon: "🕹️" },
+            { id: "site-36", name: "Shindoi's Best", url: "https://s3.amazonaws.com/shindoisbest/index.html",       icon: "💯" },
+            { id: "site-37", name: "Froggies",       url: "https://froggies.nikegtag.workers.dev/",                 icon: "🐸" },
+            { id: "site-38", name: "Muffin Clicker", url: "https://muffin-clicker.s3.amazonaws.com/index.html",     icon: "🧁" },
+            { id: "site-39", name: "Slantsite",      url: "https://s3.amazonaws.com/slantsite/index.html",          icon: "⛰️" }
+          ]
+        },
+        // ⬇️ CLOUD TOOLS CATEGORY (UNCHANGED FROM PREVIOUS) ⬇️
+        {
+          id: "cat-6", name: "Cloud Tools",
+          sites: [
+            { id: "site-40", name: "Simpsons Workers", url: "http://simpsons.oldumjr.workers.dev/",                     icon: "📺" },
+            { id: "site-41", name: "Light Speed Studying", url: "http://lightspeedstudyingtipsfortests.5sn5c6n8wd.workers.dev/", icon: "💡" },
+            { id: "site-42", name: "CS OS Is Peak",      url: "https://cs-os-is-peak.cartmansdog.workers.dev/",           icon: "⚙️" },
+            { id: "site-43", name: "School Static",      url: "https://school-static.bs-bloxcraft.workers.dev/",             icon: "🏫" },
+            { id: "site-44", name: "LS Relay (Prod)",    url: "https://lsrelay-extension-production.s3.amazonaws.com/index.html", icon: "🔌" },
+            { id: "site-45", name: "LS Relay (L)",       url: "https://lsrelay-l.s3.amazonaws.com/index.html",             icon: "🔌" }
+          ]
+        },
+        // ⬇️ CLOUDSFRONT SITES CATEGORY (UNCHANGED FROM PREVIOUS) ⬇️
+        {
+          id: "cat-7", name: "CloudFront Sites",
+          sites: [
+            { id: "site-46", name: "D2Edvleactrkkb", url: "http://d2edvleactrkkb.cloudfront.net/",                     icon: "☁️" },
+            { id: "site-47", name: "D1V5Dyshakfvq5",   url: "https://d1v5dyshakfvq5.cloudfront.net/index.html",        icon: "☁️" },
+            { id: "site-48", name: "D3K3W4kgudbm85",   url: "https://d3k3w4kgudbm85.cloudfront.net/index.html",        icon: "☁️" },
+            { id: "site-49", name: "D1Jjmz8198xmlw",   url: "https://d1jjmz8198xmlw.cloudfront.net/index.html",        icon: "☁️" },
+            { id: "site-50", name: "D21Xg0yuq8irzv",   url: "https://d21xg0yuq8irzv.cloudfront.net/",                 icon: "☁️" },
+            { id: "site-51", name: "D3Griv5hi58r65",   url: "https://d3griv5hi58r65.cloudfront.net/",                 icon: "☁️" },
+            { id: "site-52", name: "D1Kusoubqqwr7w",   url: "https://d1kusoubqqwr7w.cloudfront.net/",                 icon: "☁️" },
+            { id: "site-53", name: "D1Kdg4gl68lhf1",   url: "https://d1kdg4gl68lhf1.cloudfront.net/",                 icon: "☁️" }
+          ]
+        }
+      ]
+    };
+
+    let data = {};
+    let editMode = false;
+    let editingCategory = null;
+    let editingSite = null;
+
+    const uid = () => `id-${Date.now()}-${Math.random().toString(36).slice(2,7)}`;
+    function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+    function load() {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      data = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(DEFAULT_DATA));
+    }
+    function escHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g,"&amp;").replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    }
+
+    function render() {
+      const main = document.getElementById("main-content");
+      main.innerHTML = "";
+      data.categories.forEach(cat => {
+        const section = document.createElement("div");
+        section.className = "category-section";
+        section.innerHTML = `
+          <div class="category-header">
+            <span class="category-label">${escHtml(cat.name)}</span>
+            <div class="category-line"></div>
+            <div class="category-actions">
+              <button class="btn-cat-action" onclick="openRenameCategory('${cat.id}')">✏️ Rename</button>
+              <button class="btn-cat-action danger" onclick="deleteCategory('${cat.id}')">✕ Delete</button>
+            </div>
+          </div>
+          <div class="site-grid">
+            ${cat.sites.map(site => renderCard(site, cat.id)).join("")}
+            <div class="add-site-card" onclick="openAddSite('${cat.id}')">
+              <span style="font-size:18px">＋</span> Add site
+            </div>
+          </div>
+        `;
+        main.appendChild(section);
+      });
+
+      const btn = document.createElement("button");
+      btn.className = "add-category-btn";
+      btn.innerHTML = `<span style="font-size:18px">＋</span> Add Category`;
+      btn.onclick = openAddCategory;
+      main.appendChild(btn);
+    }
+
+    function renderCard(site, catId) {
+      const display = site.url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+      return `
+        <a class="site-card" href="${escHtml(site.url)}" target="_blank" rel="noopener"
+           onclick="if(editMode){event.preventDefault()}">
+          <div class="card-edit-controls">
+            <button class="card-btn" onclick="openEditSite(event,'${catId}','${site.id}')">✏</button>
+            <button class="card-btn del" onclick="deleteSite(event,'${catId}','${site.id}')">✕</button>
+          </div>
+          <div class="site-icon">${escHtml(site.icon || "🔗")}</div>
+          <div class="site-name">${escHtml(site.name)}</div>
+          <div class="site-url">${escHtml(display)}</div>
+        </a>
+      `;
+    }
+
+    // Clock & date
+    function updateClock() {
+      const el = document.getElementById("clock");
+      if (el) el.textContent = new Date().toLocaleTimeString([], { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+    const dateEl = document.getElementById("header-date");
+    if (dateEl) dateEl.textContent = new Date().toLocaleDateString([], { weekday:"short", month:"short", day:"numeric" });
+
+    // Edit mode
+    function toggleEditMode() {
+      if (editMode) {
+        editMode = false;
+        document.body.classList.remove("edit-mode");
+        document.getElementById("fab").textContent = "✏️";
+      } else {
+        openPasscodeModal();
+      }
+    }
+    function enterEditMode() {
+      editMode = true;
+      document.body.classList.add("edit-mode");
+      document.getElementById("fab").textContent = "✓";
+    }
+
+    // Passcode
+    function openPasscodeModal() {
+      document.getElementById("passcode-modal").classList.add("open");
+      document.getElementById("passcode-input").value = "";
+      document.getElementById("passcode-error").textContent = "";
+      setTimeout(() => document.getElementById("passcode-input").focus(), 100);
+    }
+    function closePasscodeModal() { document.getElementById("passcode-modal").classList.remove("open"); }
+    function submitPasscode() {
+      if (document.getElementById("passcode-input").value === EDIT_PASSCODE) {
+        closePasscodeModal(); enterEditMode();
+      } else {
+        document.getElementById("passcode-error").textContent = "Wrong passcode.";
+        document.getElementById("passcode-input").value = "";
+        document.getElementById("passcode-input").focus();
+      }
+    }
+
+    // Category
+    function openAddCategory() {
+      editingCategory = null;
+      document.getElementById("cat-modal-title").textContent = "New Category";
+      document.getElementById("cat-name-input").value = "";
+      document.getElementById("cat-error").textContent = "";
+      document.getElementById("cat-modal").classList.add("open");
+      setTimeout(() => document.getElementById("cat-name-input").focus(), 100);
+    }
+    function openRenameCategory(catId) {
+      editingCategory = { id: catId };
+      const cat = data.categories.find(c => c.id === catId);
+      document.getElementById("cat-modal-title").textContent = "Rename Category";
+      document.getElementById("cat-name-input").value = cat?.name || "";
+      document.getElementById("cat-error").textContent = "";
+      document.getElementById("cat-modal").classList.add("open");
+      setTimeout(() => document.getElementById("cat-name-input").focus(), 100);
+    }
+    function closeCatModal() { document.getElementById("cat-modal").classList.remove("open"); }
+    function submitCategory() {
+      const name = document.getElementById("cat-name-input").value.trim();
+      if (!name) { document.getElementById("cat-error").textContent = "Name required."; return; }
+      if (editingCategory) {
+        const cat = data.categories.find(c => c.id === editingCategory.id);
+        if (cat) cat.name = name;
+      } else {
+        data.categories.push({ id: uid(), name, sites: [] });
+      }
+      save(); render(); closeCatModal();
+    }
+    function deleteCategory(catId) {
+      if (!confirm("Delete this category and all its sites?")) return;
+      data.categories = data.categories.filter(c => c.id !== catId);
+      save(); render();
+    }
+
+    // Site
+    function openAddSite(catId) {
+      editingSite = { categoryId: catId, siteId: null };
+      document.getElementById("site-modal-title").textContent = "Add Site";
+      document.getElementById("site-name-input").value = "";
+      document.getElementById("site-url-input").value = "";
+      document.getElementById("site-icon-input").value = "";
+      document.getElementById("site-error").textContent = "";
+      document.getElementById("site-modal").classList.add("open");
+      setTimeout(() => document.getElementById("site-name-input").focus(), 100);
+    }
+    function openEditSite(e, catId, siteId) {
+      e.preventDefault(); e.stopPropagation();
+      editingSite = { categoryId: catId, siteId };
+      const cat  = data.categories.find(c => c.id === catId);
+      const site = cat?.sites.find(s => s.id === siteId);
+      if (!site) return;
+      document.getElementById("site-modal-title").textContent = "Edit Site";
+      document.getElementById("site-name-input").value = site.name;
+      document.getElementById("site-url-input").value  = site.url;
+      document.getElementById("site-icon-input").value = site.icon || "";
+      document.getElementById("site-error").textContent = "";
+      document.getElementById("site-modal").classList.add("open");
+      setTimeout(() => document.getElementById("site-name-input").focus(), 100);
+    }
+    function closeSiteModal() { document.getElementById("site-modal").classList.remove("open"); }
+    function submitSite() {
+      const name  = document.getElementById("site-name-input").value.trim();
+      let   url   = document.getElementById("site-url-input").value.trim();
+      const icon  = document.getElementById("site-icon-input").value.trim() || "🔗";
+      const errEl = document.getElementById("site-error");
+      if (!name) { errEl.textContent = "Name required."; return; }
+      if (!url)  { errEl.textContent = "URL required.";  return; }
+      if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+      const cat = data.categories.find(c => c.id === editingSite.categoryId);
+      if (!cat) return;
+      if (editingSite.siteId) {
+        const site = cat.sites.find(s => s.id === editingSite.siteId);
+        if (site) { site.name = name; site.url = url; site.icon = icon; }
+      } else {
+        cat.sites.push({ id: uid(), name, url, icon });
+      }
+      save(); render(); closeSiteModal();
+    }
+    function deleteSite(e, catId, siteId) {
+      e.preventDefault(); e.stopPropagation();
+      if (!confirm("Remove this site?")) return;
+      const cat = data.categories.find(c => c.id === catId);
+      if (cat) cat.sites = cat.sites.filter(s => s.id !== siteId);
+      save(); render();
+    }
+
+    // Keyboard
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") { closePasscodeModal(); closeCatModal(); closeSiteModal(); }
+      if (e.key === "Enter") {
+        if (document.getElementById("passcode-modal").classList.contains("open")) submitPasscode();
+        else if (document.getElementById("cat-modal").classList.contains("open")) submitCategory();
+        else if (document.getElementById("site-modal").classList.contains("open")) submitSite();
+      }
+    });
+
+    document.querySelectorAll(".modal-overlay").forEach(o => {
+      o.addEventListener("click", e => { if (e.target === o) o.classList.remove("open"); });
+    });
+
+    load();
+    render();
+  </script>
+</body>
+</html>
